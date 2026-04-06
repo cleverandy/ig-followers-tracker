@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IG Follower 變動追蹤器 Pro+ (v1.1.0)</title>
+    <title>IG Follower 變動追蹤器 Pro+ (v1.2.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .status-unfollowed-text { 
@@ -88,7 +88,7 @@
                 </h1>
                 <div class="flex flex-col">
                     <p class="text-slate-500 font-medium text-sm">專業追蹤分析工具</p>
-                    <p class="text-slate-400 font-mono text-[10px] mt-0.5 uppercase tracking-widest">Version: 1.1.0</p>
+                    <p class="text-slate-400 font-mono text-[10px] mt-0.5 uppercase tracking-widest">Version: 1.2.0</p>
                 </div>
             </div>
             <div class="flex gap-4">
@@ -161,7 +161,8 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 border-b border-slate-100">
+                        <tr class="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="p-5 w-16 text-center cursor-default">#</th>
                             <th onclick="toggleSort('name')" id="th-name" class="p-5 font-bold text-slate-600 sort-icon min-w-[150px]">帳號</th>
                             <th onclick="toggleSort('status')" id="th-status" class="p-5 font-bold text-slate-600 sort-icon">狀態</th>
                             <th onclick="toggleSort('time')" id="th-time" class="p-5 font-bold text-slate-600 sort-icon min-w-[220px]">追蹤 / 退追日期</th>
@@ -342,7 +343,7 @@
             let activeCount = 0, lostCount = 0;
             Object.keys(db).forEach(u => { if(db[u].status !== 'unfollowed') activeCount++; else lostCount++; });
 
-            keys.forEach(u => {
+            keys.forEach((u, index) => {
                 const info = db[u];
                 const tr = document.createElement('tr');
                 if (info.status === 'new') tr.style.backgroundColor = '#ecfdf5';
@@ -354,6 +355,9 @@
                 const updateTime = info.status === 'unfollowed' ? formatFullTime(info.updateTs) : "N/A";
 
                 tr.innerHTML = `
+                    <td class="p-4 text-center font-mono text-slate-400 font-bold border-r border-slate-50">
+                        ${index + 1}
+                    </td>
                     <td class="p-4 flex items-center gap-3">
                         <img src="${avatarUrl}" 
                              onclick="openLightbox('${avatarUrl}')"
@@ -397,7 +401,6 @@
             document.getElementById('lostCount').innerText = lostCount;
         }
 
-        // --- 備份命名規則更動 ---
         function exportJSON() {
             const now = new Date();
             const pad = (n) => String(n).padStart(2, '0');
