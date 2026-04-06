@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IG Follower 變動追蹤器</title>
+    <title>IG Follower 變動追蹤器 Pro+ (v1.0.6)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .status-unfollowed-text { 
@@ -13,24 +13,44 @@
         }
         tr { transition: background-color 0.2s ease; }
         tr:hover { filter: brightness(0.96); }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .sort-icon::after { content: ' ↕'; opacity: 0.3; font-size: 0.8em; margin-left: 4px; }
+        .sort-asc::after { content: ' ↑'; opacity: 1; color: #2563eb; }
+        .sort-desc::after { content: ' ↓'; opacity: 1; color: #2563eb; }
+        
+        th { cursor: pointer; user-select: none; transition: background-color 0.2s; }
+        th:hover { background-color: #f1f5f9; }
+
+        .avatar-img { transition: transform 0.2s; }
+        .avatar-img:hover { transform: scale(1.1); }
+
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-20 font-sans text-slate-900">
-    <div class="max-w-6xl mx-auto px-4 pt-8">
+    <div class="max-w-7xl mx-auto px-4 pt-8">
         <!-- 頁首與統計 -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tight italic">IG FOLLOWER TRACKER</h1>
-                <p class="text-slate-500 font-medium">比對 followers.json 內容，自動追蹤名單變動</p>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight flex items-center">
+                    <svg class="w-8 h-8 mr-2 text-pink-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    IG TRACKER PRO+
+                </h1>
+                <div class="flex flex-col">
+                    <p class="text-slate-500 font-medium text-sm">專業追蹤分析工具</p>
+                    <p class="text-slate-400 font-mono text-[10px] mt-0.5 uppercase tracking-widest">Version: 1.0.6</p>
+                </div>
             </div>
             <div class="flex gap-4">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center min-w-[130px]">
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-tighter">目前追蹤中</div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-tighter">追蹤中</div>
                     <div id="activeCount" class="text-2xl font-black text-blue-600">0</div>
                 </div>
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center min-w-[130px]">
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-tighter">累計已退追</div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-tighter">已退追</div>
                     <div id="lostCount" class="text-2xl font-black text-red-500">0</div>
                 </div>
             </div>
@@ -41,273 +61,312 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold text-slate-700 flex items-center">
                     <span class="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
-                    管理與更新
+                    名單更新
                 </h2>
-                <div class="flex gap-2 items-center">
-                    <!-- 測試功能按鈕 -->
-                    <button onclick="simulateChanges()" class="mr-4 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-2 rounded-xl font-bold transition flex items-center">
-                        🔮 點我測試模擬變動
+                <div class="flex gap-2">
+                    <button onclick="generateMockData()" class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-4 py-2 rounded-xl text-xs font-bold transition border border-amber-100">
+                        🧪 模擬測試數據
                     </button>
-
+                    <button onclick="exportJSON()" class="bg-white text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition border border-slate-200 shadow-sm">
+                        💾 導出備份
+                    </button>
                     <input type="file" id="fileImport" class="hidden" accept=".json" onchange="importBackup(this)">
-                    <button onclick="document.getElementById('fileImport').click()" class="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl text-sm font-bold transition border border-blue-200">
-                        📁 讀入歷史備份
-                    </button>
-                    <button onclick="exportJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm">
-                        💾 下載備份存檔
+                    <button onclick="document.getElementById('fileImport').click()" class="bg-white text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition border border-slate-200 shadow-sm">
+                        📁 導入備份
                     </button>
                 </div>
             </div>
 
             <div class="mb-4">
-                <p class="text-xs text-slate-400 mb-2 font-bold">在此貼上 IG 匯出的最新 JSON 內容：</p>
                 <textarea id="jsonInput" 
-                    class="w-full h-32 p-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm bg-slate-50" 
+                    class="w-full h-24 p-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm bg-slate-50" 
                     placeholder='貼上 followers.json 的內容...'></textarea>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
-                <button onclick="processData()" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-slate-200 flex items-center">
-                    🔍 開始比對與更新
+                <button onclick="processData()" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-slate-200">
+                    🔍 更新名單
                 </button>
-                
                 <div class="flex-1 text-right pr-4">
                     <span id="localStatus" class="text-[10px] text-slate-400 uppercase font-bold tracking-widest italic font-mono"></span>
                 </div>
-
-                <button onclick="clearAll()" class="text-red-400 hover:text-red-600 px-2 py-3 rounded-xl font-medium transition text-xs">
-                    清空快取
+                <button onclick="clearAll()" class="text-red-400 hover:text-red-500 text-xs font-bold">
+                    清空緩存
                 </button>
             </div>
             <div id="msg" class="mt-4 p-4 rounded-xl text-sm hidden"></div>
         </div>
 
-        <!-- 過濾器切換 -->
-        <div class="flex gap-2 mb-4 no-print overflow-x-auto pb-2">
-            <button onclick="setFilter('all')" id="filter-all" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-sm transition-all">全部名單</button>
-            <button onclick="setFilter('new')" id="filter-new" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 transition-all">只看新增 (綠色)</button>
-            <button onclick="setFilter('unfollowed')" id="filter-unfollowed" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 transition-all">只看退追 (紅色)</button>
+        <!-- 過濾與搜尋 -->
+        <div class="flex flex-col md:flex-row gap-4 mb-4 no-print items-center">
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-sm whitespace-nowrap">全部</button>
+                <button onclick="setFilter('new')" id="filter-new" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 whitespace-nowrap">新加入</button>
+                <button onclick="setFilter('unfollowed')" id="filter-unfollowed" class="filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 whitespace-nowrap">已退追</button>
+            </div>
+            <div class="relative w-full md:flex-1">
+                <input type="text" id="searchInput" oninput="render()" placeholder="搜尋帳號..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-blue-100 outline-none text-sm">
+            </div>
         </div>
 
-        <!-- 數據清單 -->
+        <!-- 數據表格 -->
         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-100">
-                        <th class="p-5 font-bold text-slate-600">帳號名稱 (Username)</th>
-                        <th class="p-5 font-bold text-slate-600">狀態</th>
-                        <th class="p-5 font-bold text-slate-600 text-center">日期</th>
-                        <th class="p-5 font-bold text-slate-600">系統備註</th>
-                    </tr>
-                </thead>
-                <tbody id="listBody" class="divide-y divide-slate-100 text-sm">
-                    <!-- JS 生成 -->
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100">
+                            <th onclick="toggleSort('name')" id="th-name" class="p-5 font-bold text-slate-600 sort-icon min-w-[150px]">帳號</th>
+                            <th onclick="toggleSort('status')" id="th-status" class="p-5 font-bold text-slate-600 sort-icon">狀態</th>
+                            <th onclick="toggleSort('time')" id="th-time" class="p-5 font-bold text-slate-600 sort-icon min-w-[220px]">追蹤 / 退追日期</th>
+                            <th class="p-5 font-bold text-slate-600 text-center">工具</th>
+                            <th class="p-5 font-bold text-slate-600">系統備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listBody" class="divide-y divide-slate-100 text-sm">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('ig_tracker_master_db_v4')) || {};
+        /**
+         * 版本紀錄:
+         * v1.0.6: 恢復 [追蹤 / 退追日期] 標題，且預設以追蹤日期倒序排列。
+         */
+        const APP_VERSION = "1.0.6";
+
+        let db = JSON.parse(localStorage.getItem('ig_tracker_v7_data')) || {};
         let currentFilter = 'all';
+        // 預設排序配置：以時間 (time) 進行 倒序 (desc) 排列
+        let sortConfig = { key: 'time', direction: 'desc' };
 
         function save() {
-            localStorage.setItem('ig_tracker_master_db_v4', JSON.stringify(db));
+            localStorage.setItem('ig_tracker_v7_data', JSON.stringify(db));
             render();
             updateLocalStatus();
         }
 
         function updateLocalStatus() {
             const hasData = Object.keys(db).length > 0;
-            document.getElementById('localStatus').innerText = hasData ? "已保存至瀏覽器儲存空間" : "無本地緩存";
+            document.getElementById('localStatus').innerText = hasData ? "資料已同步至瀏覽器" : "無本地緩存";
         }
 
-        function getToday() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        function formatFullTime(ts) {
+            if(!ts) return "--";
+            const d = new Date(ts * 1000);
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
         }
 
-        function showMsg(text, type) {
-            const m = document.getElementById('msg');
-            m.innerText = text;
-            m.className = `mt-4 p-4 rounded-xl text-sm font-bold block ${type === 'err' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`;
-            setTimeout(() => { m.classList.add('hidden'); }, 8000);
+        function toggleSort(key) {
+            if(sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc';
+            }
+            render();
         }
 
         function setFilter(type) {
             currentFilter = type;
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 transition-all";
+                btn.className = "filter-btn px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-white border border-slate-200 hover:bg-slate-50 transition-all whitespace-nowrap";
             });
-            const activeBtn = document.getElementById(`filter-${type}`);
-            activeBtn.className = "filter-btn px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-sm transition-all";
+            document.getElementById(`filter-${type}`).className = "filter-btn px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-white shadow-sm transition-all whitespace-nowrap";
             render();
-        }
-
-        // --- 測試模擬功能 ---
-        function simulateChanges() {
-            const keys = Object.keys(db);
-            if(keys.length === 0) return showMsg("⚠️ 請先貼上 JSON 建立第一批名單後，才能測試模擬功能。", "err");
-            
-            // 隨機選一個現有的人變成「已退追」
-            const activeKeys = keys.filter(k => db[k].status !== 'unfollowed');
-            if(activeKeys.length > 0) {
-                const target = activeKeys[Math.floor(Math.random() * activeKeys.length)];
-                db[target].status = 'unfollowed';
-                db[target].date = getToday();
-                db[target].note = '🔮 測試模擬：已退追';
-            }
-
-            // 隨機新增一個假帳號
-            const fakeNew = "new_follower_" + Math.floor(Math.random() * 9999);
-            db[fakeNew] = { status: 'new', date: getToday(), note: '🔮 測試模擬：新加入' };
-
-            save();
-            showMsg("✨ 已隨機產生 1 名新增(綠色)與 1 名退追(紅色)，請查看下方表格！", "ok");
         }
 
         function processData() {
             const input = document.getElementById('jsonInput').value.trim();
-            if(!input) return showMsg("⚠️ 請先貼上 JSON 數據！", "err");
+            if(!input) return;
 
             try {
                 let parsed = JSON.parse(input);
-                let list = [];
+                let rawList = Array.isArray(parsed) ? parsed : (parsed.relationships_followers || []);
+                const todayTs = Math.floor(Date.now() / 1000);
                 
-                if (Array.isArray(parsed)) list = parsed;
-                else if (parsed.relationships_followers) list = parsed.relationships_followers;
-                else throw new Error("無效格式");
-                
-                const currentUsers = list.map(i => {
-                    if (i.string_list_data && i.string_list_data[0]) return i.string_list_data[0].value;
-                    return null;
-                }).filter(Boolean);
-
-                if (currentUsers.length === 0) throw new Error("找不到用戶數據");
-
-                const today = getToday();
-                const isInitial = Object.keys(db).length === 0;
-                let added = 0, lost = 0;
-
-                if (isInitial) {
-                    currentUsers.forEach(u => {
-                        db[u] = { status: 'active', date: today, note: '初始基準數據' };
-                    });
-                    showMsg(`✅ 成功建立初始名單！共記錄 ${currentUsers.length} 人。（提示：基準名單預設為透明底色，未來有變動時才會顯示顏色）`, "ok");
-                } else {
-                    currentUsers.forEach(u => {
-                        if (!db[u] || db[u].status === 'unfollowed') {
-                            db[u] = { status: 'new', date: today, note: '本次更新發現新增' };
-                            added++;
-                        } else {
-                            if (db[u].status !== 'new') db[u].status = 'active';
-                        }
-                    });
-
-                    const currentSet = new Set(currentUsers);
-                    for (let u in db) {
-                        if (db[u].status !== 'unfollowed' && !currentSet.has(u)) {
-                            db[u].status = 'unfollowed';
-                            db[u].date = today;
-                            db[u].note = '數據更新中消失';
-                            lost++;
-                        }
+                const currentMap = new Map();
+                rawList.forEach(item => {
+                    const data = item.string_list_data[0];
+                    if(data && data.value) {
+                        currentMap.set(data.value, {
+                            href: data.href || `https://www.instagram.com/${data.value}/`,
+                            timestamp: data.timestamp || todayTs
+                        });
                     }
-                    showMsg(`比對完畢！✨ 新增: ${added}，❌ 退追: ${lost}。`, "ok");
+                });
+
+                currentMap.forEach((val, user) => {
+                    if (!db[user]) {
+                        db[user] = { 
+                            ...val, 
+                            status: 'new', 
+                            followTs: val.timestamp, 
+                            updateTs: todayTs,       
+                            note: '新發現的追蹤者' 
+                        };
+                    } else if (db[user].status === 'unfollowed') {
+                        db[user].status = 'new';
+                        db[user].updateTs = todayTs;
+                        db[user].note = '重新追蹤了你';
+                    } else {
+                        db[user].status = 'active';
+                        db[user].href = val.href;
+                    }
+                });
+
+                for (let user in db) {
+                    if (db[user].status !== 'unfollowed' && !currentMap.has(user)) {
+                        db[user].status = 'unfollowed';
+                        db[user].updateTs = todayTs; 
+                        db[user].note = '數據消失 (退追)';
+                    }
                 }
 
                 document.getElementById('jsonInput').value = "";
                 save();
-            } catch(e) {
-                showMsg("❌ 錯誤：JSON 格式不支援，請確認是否為 IG 導出的原始檔案內容。", "err");
+                showMsg("✅ 名單已完成更新！", "ok");
+            } catch(e) { 
+                showMsg("❌ 解析錯誤，請檢查 JSON 內容。", "err");
             }
+        }
+
+        function showMsg(text, type) {
+            const m = document.getElementById('msg');
+            m.innerText = text;
+            m.className = `mt-4 p-4 rounded-xl text-sm font-bold block ${type === 'err' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`;
+            setTimeout(() => { m.classList.add('hidden'); }, 5000);
+        }
+
+        function generateMockData() {
+            const now = Math.floor(Date.now() / 1000);
+            db = {
+                "instagram": { status: "active", followTs: now-864000, updateTs: now-864000, href: "https://www.instagram.com/instagram/", note: "官方帳號" },
+                "zuck": { status: "new", followTs: now, updateTs: now, href: "https://www.instagram.com/zuck/", note: "模擬新加入" },
+                "test_user": { status: "unfollowed", followTs: now-200000, updateTs: now-500, href: "#", note: "模擬退追" }
+            };
+            save();
+            showMsg("🧪 已載入模擬測試數據", "ok");
         }
 
         function render() {
             const body = document.getElementById('listBody');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
             body.innerHTML = "";
             
-            const sortedKeys = Object.keys(db).sort((a,b) => {
-                const map = { 'new': 0, 'unfollowed': 1, 'active': 2 };
-                if (map[db[a].status] !== map[db[b].status]) return map[db[a].status] - map[db[b].status];
-                return a.localeCompare(b);
+            document.querySelectorAll('th').forEach(th => th.className = th.className.replace(/sort-asc|sort-desc/g, '').trim());
+            const activeTh = document.getElementById(`th-${sortConfig.key}`);
+            if(activeTh) activeTh.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            let keys = Object.keys(db).filter(u => {
+                const info = db[u];
+                if (currentFilter === 'new' && info.status !== 'new') return false;
+                if (currentFilter === 'unfollowed' && info.status !== 'unfollowed') return false;
+                if (searchQuery && !u.toLowerCase().includes(searchQuery)) return false;
+                return true;
             });
 
-            let active = 0, lost = 0;
-
-            sortedKeys.forEach(u => {
-                const info = db[u];
-                if (info.status !== 'unfollowed') active++; else lost++;
-
-                if (currentFilter === 'new' && info.status !== 'new') return;
-                if (currentFilter === 'unfollowed' && info.status !== 'unfollowed') return;
-
-                const tr = document.createElement('tr');
-                
-                // 改用最高優先級的 Inline-style 確保顏色 100% 顯現
-                if (info.status === 'new') {
-                    tr.style.backgroundColor = '#dcfce7'; // 淺綠色
-                } else if (info.status === 'unfollowed') {
-                    tr.style.backgroundColor = '#fee2e2'; // 淺紅色
-                } else {
-                    tr.style.backgroundColor = 'transparent'; // 以往的透明背格
+            keys.sort((a, b) => {
+                let vA, vB;
+                if(sortConfig.key === 'name') { vA = a; vB = b; }
+                else if(sortConfig.key === 'status') {
+                    const m = { 'new': 0, 'unfollowed': 1, 'active': 2 };
+                    vA = m[db[a].status]; vB = m[db[b].status];
+                } else if(sortConfig.key === 'time') { 
+                    // 核心排序邏輯：退追分頁用 updateTs，其餘情況（包含全部與新加入）用 followTs
+                    if (currentFilter === 'unfollowed') {
+                        vA = db[a].updateTs || 0; vB = db[b].updateTs || 0;
+                    } else {
+                        vA = db[a].followTs || 0; vB = db[b].followTs || 0;
+                    }
                 }
+                return sortConfig.direction === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
+            });
+
+            let activeCount = 0, lostCount = 0;
+            Object.keys(db).forEach(u => { if(db[u].status !== 'unfollowed') activeCount++; else lostCount++; });
+
+            keys.forEach(u => {
+                const info = db[u];
+                const tr = document.createElement('tr');
+                if (info.status === 'new') tr.style.backgroundColor = '#ecfdf5';
+                else if (info.status === 'unfollowed') tr.style.backgroundColor = '#fef2f2';
+
+                const avatarUrl = `https://unavatar.io/instagram/${u}?fallback=https://ui-avatars.com/api/?name=${u}&background=random`;
+                const storyUrl = `https://www.storysaver.net/en`;
+
+                const followTime = formatFullTime(info.followTs);
+                const updateTime = info.status === 'unfollowed' ? formatFullTime(info.updateTs) : "N/A";
 
                 tr.innerHTML = `
-                    <td class="p-5 font-bold ${info.status === 'unfollowed' ? 'status-unfollowed-text' : 'text-slate-800'}">${u}</td>
-                    <td class="p-5">
-                        <span class="px-3 py-1 rounded-full font-black text-[10px] shadow-sm ${
-                            info.status === 'new' ? 'bg-green-600 text-white' : 
-                            (info.status === 'unfollowed' ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-500')
+                    <td class="p-4 flex items-center gap-3">
+                        <img src="${avatarUrl}" class="avatar-img w-10 h-10 rounded-full border border-slate-200 bg-white object-cover" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=${u}'">
+                        <a href="${info.href}" target="_blank" class="font-bold hover:text-blue-600 transition ${info.status === 'unfollowed' ? 'status-unfollowed-text text-red-700' : 'text-slate-800'}">
+                            ${u}
+                        </a>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-lg font-black text-[10px] tracking-widest ${
+                            info.status === 'new' ? 'bg-emerald-600 text-white' : 
+                            (info.status === 'unfollowed' ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-500')
                         }">
-                            ${info.status === 'new' ? 'NEW (新增)' : (info.status === 'unfollowed' ? 'LOST (退追)' : '追蹤中')}
+                            ${info.status.toUpperCase()}
                         </span>
                     </td>
-                    <td class="p-5 text-center font-mono text-xs text-slate-400">${info.date}</td>
-                    <td class="p-5 text-slate-400 italic">${info.note}</td>
+                    <td class="p-4 font-mono text-[11px] leading-relaxed">
+                        <div class="text-emerald-600 font-bold">Add：${followTime}</div>
+                        <div class="${info.status === 'unfollowed' ? 'text-rose-600 font-bold' : 'text-slate-300'}">Del：${updateTime}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <a href="${storyUrl}" target="_blank" title="匿名限動" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-pink-600 hover:text-white transition shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            <a href="${avatarUrl}" target="_blank" title="下載/查看大圖" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white transition shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="p-4 text-slate-400 italic text-xs">
+                        ${info.note || ''}
+                    </td>
                 `;
                 body.appendChild(tr);
             });
 
-            document.getElementById('activeCount').innerText = active;
-            document.getElementById('lostCount').innerText = lost;
+            document.getElementById('activeCount').innerText = activeCount;
+            document.getElementById('lostCount').innerText = lostCount;
         }
 
         function exportJSON() {
             const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `IG_Tracker_Backup_${getToday()}.json`;
+            a.href = URL.createObjectURL(blob);
+            a.download = `IG_Backup_${new Date().getTime()}.json`;
             a.click();
-            showMsg("💾 備份檔案已導出，請妥善保管。", "ok");
         }
 
         function importBackup(input) {
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = e => { 
                 try {
-                    const data = JSON.parse(e.target.result);
-                    db = data;
-                    save();
-                    showMsg("✅ 成功從檔案恢復歷史記錄！", "ok");
-                } catch (err) {
-                    showMsg("❌ 檔案格式錯誤，無法讀取。", "err");
+                    db = JSON.parse(e.target.result); 
+                    save(); 
+                    showMsg("✅ 備份載入成功！", "ok");
+                } catch(err) {
+                    showMsg("❌ 檔案錯誤。", "err");
                 }
             };
             reader.readAsText(file);
-            input.value = "";
         }
 
-        function clearAll() {
-            if (confirm("確定要永久刪除所有快取記錄？")) {
-                db = {};
-                save();
-            }
-        }
+        function clearAll() { if (confirm("確定清除緩存？")) { db = {}; save(); } }
 
+        // 初始化
         render();
         updateLocalStatus();
     </script>
